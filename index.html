@@ -69,6 +69,58 @@ body[data-screen="battle"] .arena-wrap{width:100%}
  body[data-screen="battle"] .topbar{padding-left:8px;padding-right:8px}
 }
 
+
+/* =====================================================================
+   04C. MOBILE GAME LOCK / LANDSCAPE / PERFORMANCE LAYOUT
+   Battle pada telefon tidak dibenarkan scroll sama sekali.
+   ===================================================================== */
+#rotateOverlay{display:none}
+body[data-screen="battle"],body[data-screen="battle"] main,body[data-screen="battle"] #battle{overflow:hidden!important}
+body[data-screen="battle"] main{height:100%;min-height:0}
+body[data-screen="battle"] #battle{height:100%;min-height:0}
+body[data-screen="battle"] #battle>.shell{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;align-content:stretch}
+body[data-screen="battle"] .arena-wrap{min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto}
+body[data-screen="battle"] #arena{height:100%;min-height:0}
+body[data-screen="battle"] .question-grid{min-height:0;overflow:hidden}
+body[data-screen="battle"] .q-card{min-height:0;overflow:hidden}
+.stage.completed{border-color:#65d993;background:#123d35;position:relative}
+.stage.completed::before{content:'✓';position:absolute;right:5px;top:2px;color:#9dffbd;font-weight:900;font-size:13px}
+.stage.completed small{color:#9dffbd}
+@media(max-width:900px){
+  body[data-screen="battle"]>.topbar{display:none!important}
+  body[data-screen="battle"] #battle>.shell{padding:5px 7px calc(5px + env(safe-area-inset-bottom,0px));grid-template-rows:auto minmax(100px,1fr) auto auto}
+  body[data-screen="battle"] .battle-note{display:none!important}
+  body[data-screen="battle"] .battle-head{padding:0 0 4px;min-height:34px;gap:5px}
+  body[data-screen="battle"] .battle-head h2{font-size:17px;line-height:1.05}
+  body[data-screen="battle"] .battle-head .muted{font-size:11px}
+  body[data-screen="battle"] .battle-head .stat{font-size:12px}
+  body[data-screen="battle"] .battle-head button{min-height:32px;padding:4px 8px;font-size:12px}
+  body[data-screen="battle"] .arena-caption{padding:3px 7px;font-size:10px}
+  body[data-screen="battle"] .mobile-tabs:not([hidden]){margin-top:4px;gap:5px}
+  body[data-screen="battle"] .mobile-tabs button{min-height:30px;padding:3px 4px;font-size:11px}
+  body[data-screen="battle"] .question-grid{margin-top:4px}
+  body[data-screen="battle"] .q-card{padding:7px 9px}
+  body[data-screen="battle"] .q-player{font-size:12px}
+  body[data-screen="battle"] .lane-power{margin-top:3px;font-size:10px}
+  body[data-screen="battle"] .q-label{font-size:10px;margin-top:2px}
+  body[data-screen="battle"] .q-text{font-size:clamp(18px,4.6vw,25px);margin:4px 0;line-height:1.05}
+  body[data-screen="battle"] .answers{gap:4px;grid-template-columns:repeat(4,1fr)!important}
+  body[data-screen="battle"] .answer-choice{min-height:36px;padding:3px 2px;font-size:14px}
+  body[data-screen="battle"] .answer-form{display:none}
+  body[data-screen="battle"] .q-tools{margin-top:3px}
+  body[data-screen="battle"] .q-tools button{min-height:30px;padding:3px 7px;font-size:11px}
+  body[data-screen="battle"] .feedback{min-height:16px;margin-top:3px;font-size:11px;line-height:1.15}
+  body[data-screen="battle"] .hint-text{font-size:10px;line-height:1.2;margin-top:2px;max-height:28px;overflow:hidden}
+}
+@media(max-width:900px) and (orientation:portrait){
+  body[data-screen="battle"] #rotateOverlay{display:flex;position:fixed;inset:0;z-index:99999;background:#06121ff5;align-items:center;justify-content:center;text-align:center;padding:26px;color:white}
+  #rotateOverlay .rotate-card{max-width:360px;padding:24px;border:1px solid #41657b;border-radius:20px;background:#0d2639;box-shadow:0 20px 60px #0008}
+  #rotateOverlay .rotate-icon{font-size:64px;display:block;animation:rotateHint 1.5s ease-in-out infinite}
+  #rotateOverlay strong{display:block;font-size:24px;color:var(--gold);margin:8px 0}
+  #rotateOverlay p{color:var(--muted);font-size:14px}
+  @keyframes rotateHint{50%{transform:rotate(90deg)}}
+}
+
 </style>
 </head>
 <body>
@@ -115,7 +167,35 @@ const choose=a=>a[rand(0,a.length-1)];
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function art(name,width=40){const [key,x,y,w,h]=SPRITES[name],k=width/w;return `<span class="art" style="width:${width}px;height:${h*k}px" aria-hidden="true"><img src="${BASE+ASSETS[key]}" alt="" style="width:${(key==='boy'||key==='girl'||key.includes('Concept')?1086:1448)*k}px;left:${-x*k}px;top:${-y*k}px"></span>`;}
 function fillArt(){document.querySelectorAll('[data-art]').forEach(el=>el.innerHTML=art(el.dataset.art,Number(el.dataset.size)||40));}
-async function loadAssets(){assetsReady=false;$('#mapBtn').disabled=true;$('#retryAssets').hidden=true;let done=0;const failed=[];await Promise.all(Object.entries(ASSETS).map(([key,file])=>new Promise(resolve=>{if(images[key]?.complete&&images[key].naturalWidth){done++;$('#assetProgress').value=done;return resolve();}const img=new Image();let settled=false;const finish=ok=>{if(settled)return;settled=true;clearTimeout(timeout);if(ok)images[key]=img;else failed.push(key);$('#assetProgress').value=++done;$('#assetLabel').textContent=`Memuatkan gambar: ${done} / 20`;resolve();};const timeout=setTimeout(()=>finish(false),20000);img.onload=()=>finish(true);img.onerror=()=>finish(false);img.src=BASE+file;})));assetsReady=failed.length===0;$('#assetLabel').textContent=assetsReady?'Semua gambar siap. Pasukan boleh bergerak!':`${failed.length} gambar belum dimuatkan. Semak internet dan cuba semula.`;$('#retryAssets').hidden=assetsReady;$('#mapBtn').disabled=!assetsReady;$('#resumeBtn').disabled=!assetsReady;}
+const CRITICAL_ASSETS=['boy','girl','background','world','ui','result','rewards','tutorial','vfx','basic'];
+function loadAssetKey(key,priority='auto'){
+ return new Promise(resolve=>{
+  if(images[key]?.complete&&images[key].naturalWidth)return resolve(true);
+  const file=ASSETS[key],img=new Image();let settled=false;
+  img.decoding='async';
+  try{img.fetchPriority=priority;}catch{}
+  const finish=async ok=>{if(settled)return;settled=true;clearTimeout(timeout);if(ok){images[key]=img;try{await img.decode();}catch{}if(key==='background'&&screen==='battle')rebuildBackgroundCache();}resolve(ok);};
+  const timeout=setTimeout(()=>finish(false),15000);
+  img.onload=()=>finish(true);img.onerror=()=>finish(false);img.src=BASE+file;
+ });
+}
+async function preloadRemainingAssets(){
+ const rest=Object.keys(ASSETS).filter(k=>!CRITICAL_ASSETS.includes(k));
+ for(const key of rest){await loadAssetKey(key,'low');$('#assetProgress').value=Math.min(20,+$('#assetProgress').value+1);}
+ $('#assetLabel').textContent='Semua aset permainan telah dicache.';
+}
+async function loadAssets(){
+ assetsReady=false;$('#mapBtn').disabled=true;$('#retryAssets').hidden=true;$('#assetProgress').max=20;$('#assetProgress').value=0;
+ let done=0,failed=[];
+ $('#assetLabel').textContent='Memuatkan aset penting…';
+ await Promise.all(CRITICAL_ASSETS.map(async key=>{const ok=await loadAssetKey(key,'high');if(!ok)failed.push(key);$('#assetProgress').value=++done;$('#assetLabel').textContent=`Aset penting: ${done} / ${CRITICAL_ASSETS.length}`;}));
+ assetsReady=failed.length===0;
+ $('#mapBtn').disabled=!assetsReady;$('#resumeBtn').disabled=!assetsReady;
+ if(!assetsReady){$('#assetLabel').textContent=`${failed.length} aset penting gagal dimuatkan. Cuba semula.`;$('#retryAssets').hidden=false;return;}
+ $('#assetLabel').textContent='Aset utama siap — boleh mula. Aset lain sedang dicache…';
+ const defer=()=>preloadRemainingAssets();
+ if('requestIdleCallback' in window)requestIdleCallback(defer,{timeout:1200});else setTimeout(defer,250);
+}
 /* =====================================================================
    07. SIMPANAN SETEMPAT / TETAPAN / PEMULIHAN
    Kunci versi baharu tidak menimpa simpanan prototaip lama.
@@ -128,7 +208,7 @@ function storageWarning(){const el=$('#storageNotice');el.hidden=false;el.textCo
 function readSave(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;const d=JSON.parse(raw);if(d.version!==3)return;save.coins=clamp(Number(d.coins)||0,0,1e9);save.xp=clamp(Number(d.xp)||0,0,1e9);save.unlocked=clamp(Math.floor(d.unlocked)||1,1,20);if(d.stars&&typeof d.stars==='object')for(let n=1;n<=20;n++)save.stars[n]=clamp(Number(d.stars[n])||0,0,3);const c=d.config||{};save.config.mode=clamp(Math.floor(c.mode)||1,1,3);save.config.topics=Array.isArray(c.topics)?c.topics.filter(t=>TOPICS[t]):['add'];if(!save.config.topics.length)save.config.topics=['add'];if(['adaptive','easy','normal','hard'].includes(c.difficulty))save.config.difficulty=c.difficulty;if(['relaxed','practice'].includes(c.pace))save.config.pace=c.pace;save.config.players=save.config.players.map((p,i)=>({...p,name:String(c.players?.[i]?.name||p.name).slice(0,18),avatar:clamp(Math.floor(c.players?.[i]?.avatar)||0,0,3),year:clamp(Math.floor(c.players?.[i]?.year)||1,1,6)}));if(validSnapshot(d.snapshot))save.snapshot=d.snapshot;}catch(e){if(e instanceof SyntaxError){$('#storageNotice').hidden=false;$('#storageNotice').textContent='Simpanan lama tidak dapat dibaca. Permainan bermula dengan profil baharu.';}else storageWarning();}}
 function validSnapshot(s){return !!(s&&s.version===3&&s.active===true&&Number.isFinite(s.hp)&&s.hp>0&&s.hp<=15&&s.stage>=1&&s.stage<=20&&s.wave>=1&&s.wave<=3&&Array.isArray(s.lanes)&&s.lanes.length>=1&&s.lanes.length<=3&&s.lanes.every(l=>l.profile&&l.profile.year>=1&&l.profile.year<=6&&HEROES[l.profile.avatar]&&Number.isFinite(l.combo)&&Array.isArray(l.bullets)&&Array.isArray(l.fx)&&l.stats&&l.topicStats&&(!l.enemy||(KINDS[l.enemy.kind]&&Number.isFinite(l.enemy.progress)))&&(!l.q||(typeof l.q.text==='string'&&Number.isFinite(l.q.answer)&&Array.isArray(l.q.choices)))));}
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch{storageWarning();}updateTotals();}
-function checkpoint(){if(run?.active)save.snapshot=JSON.parse(JSON.stringify(run));persist();}
+let checkpointTimer=0;function checkpoint(){if(run?.active)save.snapshot=JSON.parse(JSON.stringify(run));persist();}function scheduleCheckpoint(){clearTimeout(checkpointTimer);checkpointTimer=setTimeout(()=>checkpoint(),900);}
 function updateTotals(){$('#totalCoins').textContent=save.coins;$('#totalXP').textContent=`${save.xp} XP`;$('#mapLevel').textContent=`Level ${1+Math.floor(save.xp/200)}`;$('#resumeBtn').hidden=!save.snapshot;}
 /* =====================================================================
    08. NAVIGASI, PEMILIHAN HERO & TOPIK
@@ -137,7 +217,7 @@ let screen='setup',run=null,paused=false,lastFrame=0,saveTick=0,activeLane=0;
 function show(id){screen=id;document.body.dataset.screen=id;$$('.screen').forEach(el=>el.hidden=el.id!==id);window.scrollTo({top:0,behavior:'instant'});if(id==='battle'){resizeCanvas();updateHUD();}syncAudioScene();}
 function renderPlayers(){const c=save.config;$('#players').innerHTML=c.players.slice(0,c.mode).map((p,i)=>`<div class="player-edit"><div class="portrait">${art(HEROES[p.avatar].id,74)}</div><div class="fields"><label>Nama hero ${i+1}<input data-player="${i}" data-field="name" maxlength="18" value="${escapeHTML(p.name)}" aria-label="Nama hero ${i+1}"></label><label>Avatar<select data-player="${i}" data-field="avatar">${HEROES.map((h,j)=>`<option value="${j}" ${p.avatar===j?'selected':''}>${h.name}</option>`).join('')}</select></label><label>Tahap<select data-player="${i}" data-field="year">${[1,2,3,4,5,6].map(y=>`<option value="${y}" ${p.year===y?'selected':''}>Tahun ${y}</option>`).join('')}</select></label></div></div>`).join('');$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.mode===c.mode)));}
 function renderTopics(){$('#topics').innerHTML=Object.entries(TOPICS).map(([id,name])=>`<button class="topic" data-topic="${id}" aria-pressed="${save.config.topics.includes(id)}">${name}</button>`).join('');}
-function renderWorld(){const chapters=['Zombie Street','Dark Lab','Ice Zone','Boss Kingdom'];$('#stageGrid').innerHTML=Array.from({length:20},(_,i)=>{const n=i+1,s=save.stars[n]||0;return `<button class="stage ${BOSS[n]?'boss':''} ${n===save.unlocked?'current':''}" data-stage="${n}" ${n>save.unlocked?'disabled':''} aria-label="Stage ${n}${BOSS[n]?', bos '+KINDS[BOSS[n]].name:''}${n>save.unlocked?', dikunci':''}"><b>${n>save.unlocked?'🔒':n}</b><small>${s?'★'.repeat(s):BOSS[n]?'BOS':'·'}</small></button>`;}).join('');$('#worldSummary').textContent=`${save.unlocked} / 20 stage dibuka · ${chapters[Math.min(3,Math.floor((save.unlocked-1)/5))]}`;updateTotals();}
+function renderWorld(){const chapters=['Zombie Street','Dark Lab','Ice Zone','Boss Kingdom'];$('#stageGrid').innerHTML=Array.from({length:20},(_,i)=>{const n=i+1,s=save.stars[n]||0,done=s>0,locked=n>save.unlocked,current=n===save.unlocked&&!done;return `<button class="stage ${BOSS[n]?'boss':''} ${done?'completed':''} ${current?'current':''}" data-stage="${n}" ${locked?'disabled':''} aria-label="Stage ${n}${done?', selesai':''}${BOSS[n]?', bos '+KINDS[BOSS[n]].name:''}${locked?', dikunci':''}"><b>${locked?'🔒':n}</b><small>${done?'✓ '+'★'.repeat(s):BOSS[n]?'BOS':current?'NEXT':'·'}</small></button>`;}).join('');const doneCount=Object.values(save.stars).filter(v=>Number(v)>0).length;$('#worldSummary').textContent=`${doneCount} stage selesai · ${save.unlocked} / 20 stage dibuka · ${chapters[Math.min(3,Math.floor((save.unlocked-1)/5))]}`;updateTotals();}
 /* =====================================================================
    09. PENJANA MATEMATIK TAHUN 1–6
    Kesukaran mengubah nombor soalan baharu, bukan jawapan atau posisi
@@ -195,9 +275,9 @@ function submitAnswer(index,value){const lane=run?.lanes[index];if(!lane||!canAn
   lane.feedback=`Betul! ${quickLabel?quickLabel+' · ':''}${lane.combo>=3?'Combo '+lane.combo+'! ':''}Blaster dilepaskan.`;shoot(lane,damage,true,powerShot);tone('shot');
   if(run.lanes.length>1&&run.lanes.every(l=>l.teamReady)){run.lanes.forEach(l=>{l.teamReady=false;if(l.enemy?.state==='walk')shoot(l,1,false,false);});announce('SERANGAN PASUKAN!',2.5);tone('team');}}
  else{lane.stats.wrong++;topicStats.wrong++;lane.combo=0;lane.teamReady=false;updateAdaptive(lane,false);if(lane.enemy?.state==='walk')lane.enemy.progress=Math.min(.94,lane.enemy.progress+WRONG_ANSWER_STEP);lane.feedback='Belum tepat. Zombi mara satu langkah! Cuba lagi, soalan masih sama.';q.draft='';tone('wrong');}
- updatePanelState(lane);updateHUD();checkpoint();
+ updatePanelState(lane);updateHUD();scheduleCheckpoint();
 }
-function useHint(index){const l=run?.lanes[index];if(!l||!canAnswer(l))return;if(!l.q.hinted){l.q.hinted=true;l.stats.hints++;playSfx('hint',.5);}updatePanelState(l);checkpoint();}
+function useHint(index){const l=run?.lanes[index];if(!l||!canAnswer(l))return;if(!l.q.hinted){l.q.hinted=true;l.stats.hints++;playSfx('hint',.5);}updatePanelState(l);scheduleCheckpoint();}
 function shoot(lane,damage,main,powerShot=false){lane.shoot=.38;lane.bullets.push({enemyId:lane.enemy.id,progress:0,damage,main,powerShot,delay:main?0:.17});lane.fx.push({type:'muzzle',life:.23,max:.23,at:0});}
 function impact(lane,bullet){const z=lane.enemy;if(!z||z.id!==bullet.enemyId||z.state!=='walk')return;z.hp=Math.max(0,z.hp-bullet.damage);z.hit=.32;lane.fx.push({type:'impact',life:.55,max:.55,at:z.progress,label:'−'+bullet.damage});tone('hit');playSfx(KINDS[z.kind].boss?'bossHit':(bullet.damage>=2?'zombieHitHeavy':'zombieHit'),.7);if(z.hp===0){playSfx(KINDS[z.kind].boss?'bossDefeat':'zombieDefeat',.82);playSfx('coin',.4);z.state='dying';z.death=0;lane.q=null;run.kills++;run.coins+=KINDS[z.kind].boss?50:10;run.xp+=KINDS[z.kind].boss?60:15;lane.feedback=KINDS[z.kind].boss?'Bos tumbang! Hebat!':'Zombi tumbang! +10 coin';renderQuestion(lane);}else if(bullet.main){lane.q=makeQuestion(lane);lane.feedback=`Kena! ${KINDS[z.kind].name} masih ada ${z.hp} HP. Jawab lagi.`;renderQuestion(lane);}updateHUD();}
 function breach(lane){const z=lane.enemy;if(!z||z.state!=='walk')return;playSfx('zombieAttack',.72);run.hp=Math.max(0,run.hp-1);run.breaches++;z.state='attack';z.death=0;lane.hurt=.6;lane.combo=0;lane.teamReady=false;lane.bullets=[];const previous=lane.q;lane.feedback=`Pertahanan terkena! −1 nyawa.${previous?' Jawapan: '+previous.display+'.':''}`;lane.q=null;lane.fx.push({type:'shield',life:.7,max:.7,at:1,label:'−1 HP'});tone('hurt');renderQuestion(lane);updateHUD();if(run.hp<=0)finish(false);}
@@ -213,20 +293,21 @@ function tick(dt){if(!run?.active||paused)return;run.elapsed+=dt;run.bannerLife=
   if(z.state==='dying'||z.state==='attack'){z.death+=dt;if(z.death>=1.25){const retryBoss=KINDS[z.kind].boss&&z.state==='attack';l.enemy=null;l.q=null;l.bullets=[];if(!retryBoss)l.cleared++;l.delay=.65;}}
  }else if(l.cleared<2){l.delay-=dt;if(l.delay<=0)spawn(l);}}
  if(run.lanes.every(l=>l.cleared>=2&&!l.enemy)){run.transition+=dt;if(run.transition<dt*2)announce('GELOMBANG SELESAI!',2);if(run.transition>1.7){if(run.wave>=3){finish(true);return;}run.wave++;run.transition=0;run.lanes.forEach(l=>{l.cleared=0;spawn(l);});updateHUD();}}
- saveTick+=dt;if(saveTick>=5){saveTick=0;checkpoint();}updateBanner();}
-function frame(now){const dt=lastFrame?Math.min((now-lastFrame)/1000,.1):0;lastFrame=now;if(screen==='battle'){tick(dt);drawArena(now/1000);}requestAnimationFrame(frame);}
+ saveTick+=dt;if(saveTick>=12){saveTick=0;checkpoint();}updateBanner();}
+function frame(now){const dt=lastFrame?Math.min((now-lastFrame)/1000,.1):0;lastFrame=now;if(screen==='battle'){tick(dt);const minFrame=W<900?22:16;if(now-lastDraw>=minFrame){drawArena(now/1000);lastDraw=now;}}requestAnimationFrame(frame);}
 /* =====================================================================
    13. CANVAS RENDERER / ANIMASI / PELURU / IMPACT
    Pergerakan dunia kekal walaupun reduced-motion dipilih; bob/recoil
    dikurangkan. Semua watak dan VFX menggunakan PNG asal melalui drawImage.
    ===================================================================== */
-const canvas=$('#arena'),ctx=canvas.getContext('2d');let W=1000,H=350,laneH=350;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function resizeCanvas(){if(screen!=='battle')return;W=Math.max(280,canvas.parentElement.clientWidth);const n=run?.lanes.length||1;laneH=n===1?(W<600?265:350):(W<600?(n===3?112:140):170);H=laneH*n;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+const canvas=$('#arena'),ctx=canvas.getContext('2d',{alpha:false});let W=1000,H=350,laneH=350,lastDraw=0;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;const bgCache=document.createElement('canvas'),bgCtx=bgCache.getContext('2d',{alpha:false});
+function rebuildBackgroundCache(){const bg=images.background;if(!bg||!W||!H)return;bgCache.width=Math.max(1,Math.round(W));bgCache.height=Math.max(1,Math.round(H));const iw=bg.naturalWidth,ih=bg.naturalHeight,r=Math.max(W/iw,H/ih);bgCtx.fillStyle='#13273b';bgCtx.fillRect(0,0,W,H);bgCtx.drawImage(bg,(W-iw*r)/2,(H-ih*r)/2,iw*r,ih*r);bgCtx.fillStyle='#05172870';bgCtx.fillRect(0,0,W,H);}
+function resizeCanvas(){if(screen!=='battle')return;W=Math.max(280,canvas.parentElement.clientWidth);const n=run?.lanes.length||1;const caption=$('.arena-caption')?.offsetHeight||24;const parentH=canvas.parentElement.clientHeight;const available=Math.max(100,parentH-caption);H=available;laneH=H/n;const mobile=W<900;const dpr=mobile?1:Math.min(devicePixelRatio||1,1.5);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);rebuildBackgroundCache();}
 function drawCrop(key,crop,x,y,w,h,flip=false,rotation=0,alpha=1){const img=images[key];if(!img)return;ctx.save();ctx.globalAlpha=clamp(alpha,0,1);ctx.translate(x+w/2,y+h/2);ctx.rotate(rotation);ctx.scale(flip?-1:1,1);ctx.drawImage(img,...crop,-w/2,-h/2,w,h);ctx.restore();}
 function drawArt(name,x,y,w,h,alpha=1){const [key,...crop]=SPRITES[name];drawCrop(key,crop,x,y,w,h,false,0,alpha);}
 function sprite(name,cx,bottom,height,flip=false,rot=0,alpha=1){const [key,...crop]=SPRITES[name]||[name,0,0,1254,1254];const width=height*crop[2]/crop[3];drawCrop(key,crop,cx-width/2,bottom-height,width,height,flip,rot,alpha);}
-function geom(lane){const mobile=W<600,n=run.lanes.length,ground=laneH*(lane.index+1)-16;const heroH=n===1?(mobile?172:235):(mobile?(n===3?68:88):116);const heroX=mobile?49:85;const endX=heroX+heroH*.35;const startX=W-(mobile?40:70);return {ground,heroH,heroX,endX,startX,span:startX-endX,muzzleX:heroX+heroH*.28,muzzleY:ground-heroH*.67};}
-function drawArena(time){if(!run)return;ctx.clearRect(0,0,W,H);const bg=images.background;if(bg){const iw=bg.naturalWidth,ih=bg.naturalHeight,r=Math.max(W/iw,H/ih);ctx.drawImage(bg,(W-iw*r)/2,(H-ih*r)/2,iw*r,ih*r);}ctx.fillStyle='#05172870';ctx.fillRect(0,0,W,H);
+function geom(lane){const mobile=W<600,n=run.lanes.length,ground=laneH*(lane.index+1)-10;const baseHero=n===1?(mobile?172:235):(mobile?(n===3?68:88):116);const heroH=Math.max(48,Math.min(baseHero,laneH*.78));const heroX=mobile?49:85;const endX=heroX+heroH*.35;const startX=W-(mobile?40:70);return {ground,heroH,heroX,endX,startX,span:startX-endX,muzzleX:heroX+heroH*.28,muzzleY:ground-heroH*.67};}
+function drawArena(time){if(!run)return;ctx.clearRect(0,0,W,H);if(bgCache.width&&bgCache.height)ctx.drawImage(bgCache,0,0,W,H);else{ctx.fillStyle='#13273b';ctx.fillRect(0,0,W,H);}
  for(const l of run.lanes){const g=geom(l),top=l.index*laneH;ctx.fillStyle=l.index%2?'#10263555':'#061b3144';ctx.fillRect(0,top,W,laneH);ctx.strokeStyle='#9cdef94d';ctx.setLineDash([8,10]);ctx.beginPath();ctx.moveTo(0,g.ground+5);ctx.lineTo(W,g.ground+5);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=COLORS[l.index];ctx.font='bold 13px Trebuchet MS';ctx.textAlign='left';ctx.fillText(l.profile.name.slice(0,18)+' · Tahun '+l.profile.year,14,top+24);if(l.combo>=3){ctx.fillStyle='#ffe19b';ctx.fillText('COMBO '+l.combo,14,top+43);}
   const bob=reduced?0:Math.sin(time*2.7+l.index)*2.5;const recoil=reduced?0:l.shoot>0?-Math.sin(l.shoot/.38*Math.PI)*9:0;const hurt=reduced?0:l.hurt>0?Math.sin(l.hurt*55)*6:0;ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(g.heroX,g.ground,Math.max(23,g.heroH*.21),7,0,0,Math.PI*2);ctx.fill();const hero=HEROES[l.profile.avatar];sprite(hero.id,g.heroX+recoil+hurt,g.ground+bob,g.heroH*(1+(reduced?0:Math.sin(time*2.7)*.006)),hero.flip,l.hurt>0?-.035:0,l.hurt>0&&Math.floor(l.hurt*18)%2?.5:1);
   const z=l.enemy;if(z){const def=KINDS[z.kind];let x=g.startX-z.progress*g.span;const death=z.state==='dying'?z.death:0;const attack=z.state==='attack'?Math.sin(Math.min(z.death/.35,1)*Math.PI)*18:0;const walk=reduced?0:Math.sin(time*(z.kind==='flying'?7:9)+l.index);const fly=z.kind==='flying'?12+Math.sin(time*4)*5:0;const size=g.heroH*(def.boss?1.12:.86);ctx.fillStyle='#0007';ctx.beginPath();ctx.ellipse(x,g.ground,Math.max(25,size*.23),7,0,0,Math.PI*2);ctx.fill();const alpha=death?1-death/1.25:z.state==='attack'?1-Math.max(0,z.death-.55)/.7:Math.min(1,z.spawn/.25);sprite(z.kind,x-attack,g.ground-(death?0:Math.abs(walk)*3)-fly,size,def.flip,death?death*.95:walk*.025,alpha);if(z.hit>0)drawArt('spark',x-size*.42,g.ground-size*.88,size*.8,size*.8,z.hit/.32*.8);if(z.state==='walk'){const barW=def.boss?90:64,y=g.ground-size-fly-17;ctx.fillStyle='#09131fec';ctx.fillRect(x-barW/2-2,y-2,barW+4,12);ctx.fillStyle=def.boss?'#ffb854':'#9aeea5';ctx.fillRect(x-barW/2,y,barW*z.hp/z.max,8);ctx.font='bold 12px Trebuchet MS';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(`${def.name} · ${z.hp}/${z.max}`,clamp(x,70,W-70),y-7);}}
@@ -292,5 +373,6 @@ $('#resultMap').onclick=()=>{renderWorld();show('world');};$('#replay').onclick=
 new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
 initGameAudio();document.addEventListener('pointerdown',()=>{primeAudio();syncAudioScene();},{once:true});readSave();renderPlayers();renderTopics();fillArt();updateTotals();$('#difficulty').value=save.config.difficulty;$('#pace').value=save.config.pace;$('#introBg').style.backgroundImage=`url('${BASE+ASSETS.background}')`;$('#introBoy').src=BASE+ASSETS.boy;$('#introGirl').src=BASE+ASSETS.girl;$('#worldImg').src=BASE+ASSETS.world;$('#bossRoster').innerHTML=Object.values(BOSS).map(k=>`<img src="${BASE+ASSETS[k]}" alt="${KINDS[k].name}">`).join('');loadAssets();requestAnimationFrame(frame);
 </script>
+<div id="rotateOverlay" aria-live="polite"><div class="rotate-card"><span class="rotate-icon">📱</span><strong>Putar telefon</strong><p>Permainan mobile direka untuk landscape supaya seluruh arena dan soalan muat dalam satu skrin tanpa scroll.</p></div></div>
 </body>
 </html>
